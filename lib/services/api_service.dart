@@ -22,4 +22,22 @@ class ApiService {
       throw Exception('Network error: $e');
     }
   }
+
+  Future<Map<String, String>> fetchCurrencyNames() async {
+  final url = Uri.https(baseUrl, '/currencies');
+
+  try {
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> data = json.decode(response.body);
+      // Konverteerime Map<String, dynamic> -> Map<String, String>
+      return data.map((key, value) => MapEntry(key, value.toString()));
+    } else {
+      throw Exception('Failed to load currency names');
+    }
+  } catch (e) {
+    throw Exception('Network error while fetching names: $e');
+  }
+}
 }
