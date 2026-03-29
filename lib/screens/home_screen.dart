@@ -33,6 +33,9 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final names = await _apiService.fetchCurrencyNames();
       final rates = await _apiService.fetchLatestRates(_baseCurrency);
+
+      await _loadFavorites(); // Laeme lemmikud enne UI uuendamist
+
       setState(() {
         _currencyNames = names;
         _exchangeData = rates;
