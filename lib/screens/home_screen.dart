@@ -74,12 +74,23 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('BigBank Exchange'),
+        title: const Text('Bigbank Currency Exchange'),
         backgroundColor: Colors.blueAccent,
       ),
       body: _isLoading 
         ? const Center(child: CircularProgressIndicator())
-        : Column(
+        : _errorMessage != null // veateate kuvamine, kui on viga
+          ? Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Center(
+                child: Text(
+                  'Viga andmete laadimisel:\n$_errorMessage',
+                  style: const TextStyle(color: Colors.red, fontSize: 16),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            )
+        : Column( // vigade puudumisel näitame andmeid
             children: [
               _buildHeader(),
               const Divider(),
