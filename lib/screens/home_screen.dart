@@ -28,30 +28,29 @@ class _HomeScreenState extends State<HomeScreen> {
     _initialLoad();
   }
 
-  // Esmane laadimine: nimed + kursid
+  // Esmane laadimine: lemmikud ja siis ülejäänud nimed + kursid
   Future<void> _initialLoad() async {
     try {
+      await _loadFavorites(); // Laeme lemmikud enne UI uuendamist
+
       final names = await _apiService.fetchCurrencyNames();
       final rates = await _apiService.fetchLatestRates(_baseCurrency);
-      setState(() {
-        _currencyNames = names;
-        _exchangeData = rates;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _errorMessage = e.toString();
-        _isLoading = false;
-      });
-    }
-  }
 
-  // LAADIMINE seadmest
-  Future<void> _loadFavorites() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _favorites = (prefs.getStringList('favorites') ?? []).toSet();
-    });
+      if (mounted) {
+        setState(() {
+          _currencyNames = names;
+          _exchangeData = rates;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.toString();
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   // SALVESTAMINE seadmesse
@@ -64,19 +63,40 @@ class _HomeScreenState extends State<HomeScreen> {
         _favorites.add(code);
       }
     });
+    
     await prefs.setStringList('favorites', _favorites.toList());
+  }
+
+  // LAADIMINE seadmest
+  Future<void> _loadFavorites() async {
+    final prefs = await SharedPreferences.getInstance();
+    final List<String>? savedFavs = prefs.getStringList('favorites');
+    setState(() {
+      _favorites = (savedFavs ?? []).toSet();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('BigBank Exchange'),
+        title: const Text('Bigbank Currency Exchange'),
         backgroundColor: Colors.blueAccent,
       ),
       body: _isLoading 
         ? const Center(child: CircularProgressIndicator())
-        : Column(
+        : _errorMessage != null // veateate kuvamine, kui on viga
+          ? Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Center(
+                child: Text(
+                  'Viga andmete laadimisel:\n$_errorMessage',
+                  style: const TextStyle(color: Colors.red, fontSize: 16),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            )
+        : Column( // vigade puudumisel näitame andmeid
             children: [
               _buildHeader(),
               const Divider(),
@@ -102,7 +122,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: 10),
           DropdownButtonFormField<String>(
-            value: _baseCurrency,
+            initialValue: _baseCurrency,
             decoration: const InputDecoration(labelText: 'Baasvaluuta'),
             items: _currencyNames.keys.map((code) {
               return DropdownMenuItem(value: code, child: Text('$code - ${_currencyNames[code]}'));
