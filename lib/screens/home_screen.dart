@@ -35,14 +35,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
       final names = await _apiService.fetchCurrencyNames();
       final rates = await _apiService.fetchLatestRates(_baseCurrency);
-
-      if (mounted) {
-        setState(() {
-          _currencyNames = names;
-          _exchangeData = rates;
-          _isLoading = false;
-        });
-      }
+      setState(() {
+        _currencyNames = names;
+        _exchangeData = rates;
+        _isLoading = false;
+      });
     } catch (e) {
       if (mounted) {
         setState(() {
